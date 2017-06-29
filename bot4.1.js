@@ -15,7 +15,7 @@ var ws = new WebSocket('wss://sinair.ru:8080/chat');
 var bot_nameOnOpen = "C3PO";
 var bot_name = bot_nameOnOpen;
 var bot_color = "0c0";
-var mainRoom = "#test";
+var mainRoom = "#chat";
 var curRoom = null;
 //curRoom.name = mainRoom;
 var intime = {};
@@ -123,7 +123,7 @@ var questions = ["","","**********СТАНДАРТНЫЕ ФРАЗЫ*************
 
 var getClosest = function (str, quests){
   var n = 0;
-  var d = 30;
+  var d = 15;
   var dist = d;
   var length = quests.length;
   for (var i = 0; i < length; i++){
@@ -152,7 +152,6 @@ var PackType = {
 	leave: 7,
 	create_room: 8,
 	remove_room: 9,
-	ping: 10,
 };
 
 var UserStatus = {
@@ -163,7 +162,6 @@ var UserStatus = {
 	nick_change: 4,
 	gender_change: 5,
 	color_change: 6,
-	back: 7,
 };
 
 function Room(name){
@@ -257,15 +255,6 @@ var send = function(msg){
 				//console.log("Sending to server: " + strm);
 				ws.send(strm);
 };
-
-var stripNames = function(msg){
-	var res = msg;
-	for (var i = 0; i < curRoom.members.length; i++)
-	{
-		res.replaceAll(curRoom.members[i].name, ' ');
-	}
-	return res;
-}
 
 var proccessMsg = function (msg){
 	while (msg[0] === '/')
@@ -439,10 +428,6 @@ var joinRooms = function(){
 	}
 };
 
-ws.on('error', function error(er) {
-	console.log(er);
-});
-
 ws.on('open', function open() {
 	joinRooms();
 
@@ -456,19 +441,23 @@ ws.on('message', function(data, flags) {
       case PackType.message:
       if (dt.target !== ''){
     		bot_name = getRoomByName(dt.target).member_login;
-    		curRoom = getRoomByName(dt.target);
 		}
       if (dt.from_login !== undefined && dt.message !== undefined && dt.message.substr(0,2) !== './'){
       	console.log(dt.from_login + ": " + dt.message);
       }
       if (bot_name === '') break;
+      if (dt.target !== ''){
+    	  curRoom = getRoomByName(dt.target);
+    	}
+      //console.log("bot_name is: " + bot_name);
       ansMachine(dt);
-    if (dt.from_login === bot_name) { }
-	else if (dt.message !== undefined && dt.message.length > 200
+	if (dt.message !== undefined && dt.message.length > 200
       && dt.from_login.toLowerCase() !== bot_name.toLowerCase())
       {
         send("С тобой так интересно!");
       }
+
+
     else if (dt.to !== '0' & dt.message.substr(0, 5) === '/say ') {
                     var say = dt.message.substr(5);
                     say = say.replaceAll('300', '').replaceAll('  ', '');
@@ -477,16 +466,10 @@ ws.on('message', function(data, flags) {
 
     else if (  dt.message.toLowerCase().substr(0, 15) === "./history grep " )
       {
-      	exec('cat log | grep -m 3 "' + dt.message.substr(15).replaceAll('"', '').replaceAll("'", '').replaceAll('$', '').replaceAll('`', '') + '"', function callback(error, stdout, stderr){
+      	exec('cat bot.log | grep -m 3 "' + dt.message.substr(15).replaceAll('"', '').replaceAll("'", '').replaceAll('$', '').replaceAll('`', '') + '"', function callback(error, stdout, stderr){
     		send(stdout);
 		});
       }
-
-	else if (dt.message.toLowerCase().indexOf("спасибо") !== -1 && 
-			(dt.message.toLowerCase().indexOf(bot_name.toLowerCase()) !== -1 ||
-			dt.message.toLowerCase().indexOf("цыпа") !== -1) ){
-		send("Не за что!");
-	}
 
     else if (  dt.message.toLowerCase().substr(0, 8 + bot_name.length) == bot_name.toLowerCase() + ", погода" )
       {
@@ -641,39 +624,82 @@ ws.on('message', function(data, flags) {
                 		//console.log("Room " + tmpr + " is already in rooms array");
                 	}
                 }
-else if (dt.message.match(/(https?:\/\/[^\s"']+)/g)) {
-    var links = dt.message.match(/(https?:\/\/[^\s"']+)/g);
-    var links_count = links.length;
 
-    if (links_count > 1) send('Иди в жопу с таким количеством ссылок!');
-    else
-    for (var i = 0; i < links_count; i++) {
+
+	else if ( dt.message.match(/(https?:\/\/[^\s"']+)/g) )
+      {
+      var links = dt.message.match(/(https?:\/\/[^\s"']+)/g);
+      var links_count = links.length;
+      
+      for (var i = 0; i < links_count; i++)
+      {
         var options = {
-            host: "127.0.0.1",
-            port: 80,
-            path: "/title.php?url=" + links[i]
-        };
-        var body = '';
-        http.get(options, function(res) {
-            res.setEncoding('utf8');
-            res.on('data', function(chunk) {
-                body += chunk;
-            });
-            res.on('end', function() {
-                //console.log("Title request response: " + body);
-                while (body[0] !== '{') {
-                    body = body.substr(1);
-                }
-                var ans = JSON.parse(body);
-                send(ans.title);
-            });
-        }).on('error', function(e) {
-            //console.log("Got error on title request: " + e.message);
-        });
+		host: "127.0.0.1",
+		port: 80,
+		path: "/title.php?url=" + links[i]
+	};
+	var body = '';
+	http.get(options, function(res){
+		res.setEncoding('utf8');
+		res.on('data', function(chunk) {
+			body += chunk;
+ 		});
+		res.on('end', function() {
+		//console.log("Title request response: " + body);
+		while (body[0] !== '{')
+		{
+			body = body.substr(1);
+		}
+		var ans = JSON.parse(body);
+		send(ans.title);
+		});
+	}).on('error', function(e) {
+  		//console.log("Got error on title request: " + e.message);
+	});
+      }
     }
-    //await (sleep(500));
-}
 
+else if ( (Math.floor(Math.random() * (10 - 0)) + 0) > 7)
+{
+	var spellCheck = [];
+	var correction = '';
+ 	var body = '';
+	var post_data = querystring.stringify({
+	text: dt.message,
+ 	options: 512+2048+4+2+1
+	});
+
+var options = {
+		host: "speller.yandex.net",
+		path: "/services/spellservice.json/checkText",
+		method: 'POST',
+  		headers: {
+    		'Content-Type': 'application/x-www-form-urlencoded', // json,
+    		'Content-Length': Buffer.byteLength(post_data),
+  		}
+	};
+
+var post_req = http.request(options, function(res) {
+	res.setEncoding('utf8');
+	res.on('data', function (chunk) {
+		body += chunk;
+		//console.log("chunk: " + chunk);
+	});
+	res.on('end', function() {
+		//console.log("Spellcheck answer: " + body);
+		var responseJSON = JSON.parse(body);
+		for (var spellCounter = 0; spellCounter < responseJSON.length; spellCounter++){
+		if (responseJSON[spellCounter].s[0] !== undefined)
+		{
+		correction += ' *' + responseJSON[spellCounter].s[0];
+		}
+		}
+		send(proccessMsg(correction));
+		});
+});
+post_req.write(post_data);
+post_req.end();
+}
 
 
     else if (dt.message.toLowerCase().substr(0, bot_name.length) === bot_name.toLowerCase())
@@ -734,53 +760,6 @@ else if (dt.message.match(/(https?:\/\/[^\s"']+)/g)) {
 			});
           }
         }
-	else if (dt.message.toLowerCase().indexOf("привет") !== -1 && 
-			(dt.message.toLowerCase().indexOf(bot_name.toLowerCase()) !== -1 ||
-			dt.message.toLowerCase().indexOf("цыпа") !== -1) ){
-		send("Привет!");
-	}
-
-	else if ( (Math.floor(Math.random() * (10 - 0)) + 0) > 7)
-{
-	var spellCheck = [];
-	var correction = '';
- 	var body = '';
-	var post_data = querystring.stringify({
-	text: stripNames(dt.message),
- 	options: 512+2048+4+2+1
-	});
-
-var options = {
-		host: "speller.yandex.net",
-		path: "/services/spellservice.json/checkText",
-		method: 'POST',
-  		headers: {
-    		'Content-Type': 'application/x-www-form-urlencoded', // json,
-    		'Content-Length': Buffer.byteLength(post_data),
-  		}
-	};
-
-var post_req = http.request(options, function(res) {
-	res.setEncoding('utf8');
-	res.on('data', function (chunk) {
-		body += chunk;
-		//console.log("chunk: " + chunk);
-	});
-	res.on('end', function() {
-		//console.log("Spellcheck answer: " + body);
-		var responseJSON = JSON.parse(body);
-		for (var spellCounter = 0; spellCounter < responseJSON.length; spellCounter++){
-		if (responseJSON[spellCounter].s[0] !== undefined)
-		{
-		correction += ' *' + responseJSON[spellCounter].s[0];
-		}
-		}
-		send(proccessMsg(correction));
-		});
-});
-post_req.write(post_data);
-post_req.end();
-}
 
 
       case PackType.online_list:
@@ -919,15 +898,7 @@ post_req.end();
       case PackType.create_room:
         joinRoom(dt.target);
         break;
-
-      case PackType.ping:
-	ws.send(JSON.stringify({type: PackType.ping}));
-	break;
 };
   // flags.binary will be set if a binary data is received.
   // flags.masked will be set if the data was masked.
 });
-
-// ws.on('error', function(data, flags) {
-// joinRooms();
-// }
