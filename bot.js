@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 var http = require('http');
 var WebSocket = require('ws');
@@ -10,12 +10,12 @@ const exec = require('child_process').exec;
 var cheerio = require('cheerio'),
 	$ = cheerio.load('');
 //var fs = require('fs');
-var ws = new WebSocket('wss://sinair.ru:8080/chat');
+var ws = new WebSocket('wss://sinair.ru/ws/chat');
 
 var bot_nameOnOpen = "C3PO";
 var bot_name = bot_nameOnOpen;
 var bot_color = "0c0";
-var mainRoom = "#test";
+var mainRoom = "#chat";
 var curRoom = null;
 //curRoom.name = mainRoom;
 var intime = {};
@@ -488,7 +488,7 @@ ws.on('message', function(data, flags) {
 		send("Не за что!");
 	}
 
-    else if (  dt.message.toLowerCase().substr(0, 8 + bot_name.length) == bot_name.toLowerCase() + ", погода" )
+    else if ( false && dt.message.toLowerCase().substr(0, 8 + bot_name.length) == bot_name.toLowerCase() + ", погода" )
       {
         var whatToTell = dt.message.toLowerCase().substr(9 + bot_name.length);
         whatToTell = whatToTell.replaceAll('в ', '');
