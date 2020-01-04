@@ -2,8 +2,8 @@
 
 var http = require('http');
 var WebSocket = require('ws');
-var async = require('asyncawait/async');
-var await = require('asyncawait/await');
+// var async = require('asyncawait/async');
+// var await = require('asyncawait/await');
 var querystring = require('querystring');
 var iconvlite = require('iconv-lite');
 const exec = require('child_process').exec;
@@ -29,7 +29,7 @@ var PackType = {
 // };
 
 var mainF = function () {
-	var ws = new WebSocket('wss://sinair.ru:8080/chat');
+	var ws = new WebSocket('wss://sinair.ru/ws/chat');
 
 	ws.on('open', function open() {
 		ws.send(JSON.stringify({
@@ -51,18 +51,20 @@ var mainF = function () {
 	  switch (dt.type){
 	      case PackType.online_list:
 	      	//console.log("> " + data);
-			for (var i in dt.list){
+					for (var i in dt.list){
 						var item = dt.list[i];
 						if (item.name == "C3PO") isOnline = true;						
 					}
-			console.log('C3PO is ' + ((isOnline) ? 'online':'offline'));
-						if(!isOnline) {
-							exec('nohup node bot.js >> log &', function callback(error, stdout, stderr){
-    					//console.log(stdout);
-    					});
-						}
-			break;
+					console.log('C3PO is ' + ((isOnline) ? 'online':'offline'));
+					if(!isOnline) {
+						exec('node bot.js >> log &', function callback(error, stdout, stderr){
+							// console.log(error);
+							// console.log(stderr);
+						});
+					}
+				break;
 		}
 	});
 }
-setInterval(() => mainF(), 60000);
+//setInterval(() => mainF(), 60000);
+mainF();
