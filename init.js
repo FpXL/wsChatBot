@@ -68,5 +68,5 @@ var mainF = function () {
 		}
 	});
 }
-//setInterval(() => mainF(), 60000);
-mainF();
+setInterval(() => mainF(), 15 * 60 * 1000);
+// mainF();
