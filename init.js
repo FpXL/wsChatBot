@@ -7,6 +7,7 @@ var WebSocket = require('ws');
 var querystring = require('querystring');
 var iconvlite = require('iconv-lite');
 const exec = require('child_process').exec;
+var childProcess = require('child_process');
 var cheerio = require('cheerio'),
 	$ = cheerio.load('');
 
@@ -57,10 +58,11 @@ var mainF = function () {
 					}
 					console.log('C3PO is ' + ((isOnline) ? 'online':'offline'));
 					if(!isOnline) {
-						exec('node bot.js >> log &', function callback(error, stdout, stderr){
-							// console.log(error);
-							// console.log(stderr);
-						});
+						childProcess.fork('./bot.js');
+						// exec('node bot.js >> log &', function callback(error, stdout, stderr){
+						// 	console.log(error);
+						// 	console.log(stderr);
+						// });
 					}
 				break;
 		}

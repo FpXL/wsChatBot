@@ -1,0 +1,25 @@
+{
+  "name": "wschatbot",
+  "version": "1.0.0",
+  "description": "Чат бот для sinair.ru",
+  "main": "init.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FpXL/wsChatBot.git"
+  },
+  "author": "FpXL",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FpXL/wsChatBot/issues"
+  },
+  "homepage": "https://github.com/FpXL/wsChatBot#readme",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "iconv-lite": "^0.6.2",
+    "querystring": "^0.2.0",
+    "ws": "^7.3.1"
+  }
+}
