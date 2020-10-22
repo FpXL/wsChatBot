@@ -29,6 +29,9 @@ var machine = {};
 var startTime = Date.now();
 var rooms = [];
 
+// Эта строчка нужна для деплоя не хероку
+var port = process.env.PORT || 5000;
+
 var jokes = {
 	"анекдот": 1,
   '1': 1,
